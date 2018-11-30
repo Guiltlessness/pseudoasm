@@ -10,6 +10,25 @@ std::streamsize file__size(std::fstream& file) noexcept {
     return std::streamsize(size);
 }
 
+std::list<std::string> get_codelist(char** files, int count) {
+    std::list<std::string> codelist;
+    for (int i = 0; i < count; ++i) {
+        std::fstream file(files[i], std::ios::in | std::ios::binary);
+        if (!file.is_open()) {
+            throw("Cannot open file " + std::string(files[i]));
+        }
+        auto size = file__size(file);
+        char* readeblecode = new char[size];
+        file.read(readeblecode, size);
+        file.close();
+        auto additive = asmcmplr::splitcode(readeblecode, size);
+        codelist.insert(codelist.end(), additive.begin(), additive.end());
+        asmcmplr::splitcode(readeblecode, size);
+        delete[] readeblecode;
+    }
+    return codelist;
+}
+
 int main(int argc, char** argv) {
 	if (argc < 2) {
 		std::cerr << "Enter " << argv[0] << " [file name]\n";
