@@ -4,22 +4,18 @@
 #include <list>
 
 namespace asmcmplr {
-	using markslist_t = std::map<std::string, int>;
-	using funcslist_t = std::map<std::string, int>;
+	using position_t = unsigned short;
+	using markslist_t = std::map<std::string, position_t>;
+	using funcslist_t = std::map<std::string, position_t>;
 	using codelist_t = std::list<std::string>;
 
 	std::pair<funcslist_t, markslist_t> 
-		markswork(codelist_t& code, size_t size) noexcept;
+        markswork(codelist_t& code);
 
-	char*
-		translate(codelist_t const& code, funcslist_t const& funclist) noexcept;
+	std::string
+        translate(codelist_t const& code, funcslist_t const& funclist, markslist_t const& markslist);
 
 	asmcmplr::codelist_t
-		splitcode(char* readeblecode) noexcept;
+        splitcode(char* readeblecode, std::streamsize size) noexcept;
 
-	void
-		valid_flist(funcslist_t const& flist);
-
-	void
-		valid_mlist(markslist_t const& mlist);
 }

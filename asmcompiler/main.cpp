@@ -3,11 +3,11 @@
 #include <list>
 #include "asmcompiler.hpp"
 
-size_t file__size(std::fstream& file) noexcept {
+std::streamsize file__size(std::fstream& file) noexcept {
 	file.seekg(std::ios::end);
 	auto size = file.tellg();
 	file.seekg(std::ios::beg);
-	return size;
+    return std::streamsize(size);
 }
 
 int main(int argc, char** argv) {
@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 		std::cerr << "Enter " << argv[0] << " [file name]\n";
 		return 0;
 	}
-	char* outfile = argc == 3 ? argv[2] : "b.out";
+    const char* outfile = "main.bc";
 	
 	std::fstream file(argv[1], std::ios::in | std::ios::binary);
 	std::fstream outf(outfile, std::ios::out | std::ios::binary);
@@ -29,17 +29,21 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	size_t size = file__size(file);
+    auto size = file__size(file);
 	char* readeblecode = new char[size];
 	file.read(readeblecode, size);
 	file.close();
 
-	std::list<std::string> codelist = asmcmplr::splitcode(readeblecode);
-	auto [funcs, marks] = asmcmplr::markswork(codelist, size); // find & erase marks
-	asmcmplr::valid_flist(funcs);
-	asmcmplr::valid_mlist(marks);
-	std::string bytecode = asmcmplr::translate(codelist, funcs);
-	outf.write(bytecode.c_str(), bytecode.size());
+	std::list<std::string> codelist = asmcmplr::splitcode(readeblecode, size);
+    asmcmplr::funcslist_t funcs; asmcmplr::markslist_t marks;
+    std::tie(funcs, marks) = asmcmplr::markswork(codelist); // find & erase marks
+
+    if (!funcs.count("main")) {
+        throw std::runtime_error("Not found a main function");
+    }
+
+	std::string bytecode = asmcmplr::translate(codelist, funcs, marks);
+    outf.write(bytecode.c_str(), std::streamsize(bytecode.size()));
 	outf.close();
 
 	delete[] readeblecode;
